@@ -6,16 +6,66 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import Button from '../Shared/Button/Button'
 import useAuth from '../../hooks/useAuth';
+import toast from 'react-hot-toast';
+import useAxiosSecure from '../../hooks/useAxiosSecure';
 
-const PurchaseModal = ({ closeModal, isOpen, plant }) => {
-  const { category, description, image, price, name, quantity, seller } = plant;
+const PurchaseModal = ({ closeModal, isOpen, plant, refetch }) => {
+  const { category, price, name, quantity, seller, _id } = plant;
   const { user } = useAuth();
+  const axiosSecure = useAxiosSecure();
+  const [totalQuantity, setTotalQuantity] = useState(1);
+  const [totalPrice, setTotalPrice] = useState(price);
+  const [purchaseInfo, setPurchaseInfo] = useState({
+    customer: {
+      name: user?.displayName,
+      email: user?.email,
+      image: user?.photoURL
+    },
+    plantId: _id,
+    price: totalPrice,
+    quantity: totalQuantity,
+    seller: seller?.email,
+    address: '',
+    status: 'Pending',
+  });
 
+  const handleQuantity = (value) => {
+    if (value > quantity) {
+      setTotalQuantity(quantity);
+      return toast.error('Quantity exceeds available stock!')
+    }
+    if (value < 0) {
+      setTotalQuantity(1);
+      return toast.error('Quantity cannot be less than 1!')
+    }
+    setTotalQuantity(value);
+    setTotalPrice(value * price)
+    setPurchaseInfo(prev => ({ ...prev, quantity: value, price: value * price }))
+  }
+  
 
-  // Total Price Calculation
+  const handlePurchase = async () => {
+    // post request to db
+    try {
+      // save data in db
+      await axiosSecure.post('/order', purchaseInfo)
+
+      // decrease quantity from plant collection
+      await axiosSecure.patch(`/plants/quantity/${_id}`, {quantityToUpdate: totalQuantity})
+
+      toast.success('Purchase Successful!')
+      refetch();
+    } catch (error) {
+      console.log(error);
+    }
+    finally {
+      closeModal();
+    }
+  }
+
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -72,7 +122,8 @@ const PurchaseModal = ({ closeModal, isOpen, plant }) => {
                     Quantity: 
                   </label>
                   <input
-                    max={quantity}
+                    value={parseInt(totalQuantity)}
+                    onChange={(e) => handleQuantity(parseInt(e.target.value))}
                     className=' p-2 text-gray-800 border border-lime-300 focus:outline-lime-500 rounded-md bg-white'
                     name='quantity'
                     id='quantity'
@@ -88,18 +139,20 @@ const PurchaseModal = ({ closeModal, isOpen, plant }) => {
                     Address:
                   </label>
                   <input
-                    
+                    onChange={(e)=> setPurchaseInfo(prev=>({...prev, address: e.target.value}))}
                     className=' p-2 text-gray-800 border border-lime-300 focus:outline-lime-500 rounded-md bg-white'
                     name='address'
                     id='address'
-                    type='number'
+                    type='text'
                     placeholder='Shipping Address'
                     required
                   />
                 </div>
 
 
-                <div className='mt-3'><Button label='Purchase'></Button></div>
+                <div className='mt-3'><Button
+                  onClick={handlePurchase}
+                  label={`Pay ${totalPrice}$`}></Button></div>
 
               </DialogPanel>
             </TransitionChild>
