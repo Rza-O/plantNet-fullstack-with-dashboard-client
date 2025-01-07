@@ -11,6 +11,8 @@ import LoadingSpinner from '../../components/Shared/LoadingSpinner'
 
 const PlantDetails = () => {
   const { id } = useParams();
+  
+  let [isOpen, setIsOpen] = useState(false)
 
   const { data: plant = {}, isLoading, refetch } = useQuery({
     queryKey: ['plant', id],
@@ -20,7 +22,7 @@ const PlantDetails = () => {
     }
   })
 
-  let [isOpen, setIsOpen] = useState(false)
+
 
   const closeModal = () => {
     setIsOpen(false)
