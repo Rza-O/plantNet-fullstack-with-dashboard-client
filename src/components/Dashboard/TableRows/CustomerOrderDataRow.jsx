@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import DeleteModal from '../../Modal/DeleteModal'
-import useAxiosSecure, { axiosSecure } from '../../../hooks/useAxiosSecure'
+import useAxiosSecure from '../../../hooks/useAxiosSecure'
+import toast from 'react-hot-toast'
 
 
 const CustomerOrderDataRow = ({ order, refetch }) => {
@@ -21,9 +22,11 @@ const CustomerOrderDataRow = ({ order, refetch }) => {
         status: 'increase',
       })
       // call refetch to refresh ui
-      refetch()
+      refetch();
+      toast.success('Order has been cancelled!')
     } catch (error) {
       console.log(error)
+      toast.error(error.response.data)
     } finally {
       closeModal()
     }
