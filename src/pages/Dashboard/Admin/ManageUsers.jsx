@@ -8,7 +8,7 @@ import useAuth from '../../../hooks/useAuth'
 const ManageUsers = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['users', user?.email],
     queryFn: async () => {
       const { data } = await axiosSecure(`/all-users/${user?.email}`);
@@ -18,7 +18,8 @@ const ManageUsers = () => {
   if (isLoading) {
     return <LoadingSpinner></LoadingSpinner>
   }
-  console.log(users)
+
+
   return (
     <>
       <div className='container mx-auto px-4 sm:px-8'>
@@ -59,7 +60,7 @@ const ManageUsers = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(userData => <UserDataRow key={userData?._id} userData={userData} />)}
+                  {users.map(userData => <UserDataRow refetch={refetch} key={userData?._id} userData={userData} />)}
                 </tbody>
               </table>
             </div>
