@@ -33,7 +33,20 @@ const SellerOrderDataRow = ({ orderData, refetch }) => {
   }
 
   const handleStatus = async (newStatus) => {
-    console.log(newStatus)
+    if (status === newStatus) return
+
+    // patch request to server
+    try {
+      // update order status
+      await axiosSecure.patch(`/orders/${_id}`, {
+        status: newStatus,
+      })
+      refetch();
+      toast.success('Status Updated');
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data);
+    }
   }
 
   return (
@@ -45,25 +58,26 @@ const SellerOrderDataRow = ({ orderData, refetch }) => {
         <p className='text-gray-900 whitespace-no-wrap'>{customer?.email}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>${ price}</p>
+        <p className='text-gray-900 whitespace-no-wrap'>${price}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>{ quantity}</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{quantity}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>{ address}</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{address}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>{ status}</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{status}</p>
       </td>
 
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
         <div className='flex items-center gap-2'>
           <select
             required
-            onChange={(e)=> handleStatus(e.target.value)}
+            onChange={(e) => handleStatus(e.target.value)}
             className='p-1 border-2 border-lime-300 focus:outline-lime-500 rounded-md text-gray-900 whitespace-no-wrap bg-white'
             name='category'
+            disabled={status === "Delivered"}
             defaultValue={status}
           >
             <option value='Pending'>Pending</option>
